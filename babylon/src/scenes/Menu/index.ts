@@ -34,7 +34,9 @@ export class Menu extends Base {
 
     camera.lowerBetaLimit = Math.PI / 4;
     camera.upperBetaLimit = (Math.PI * 3) / 4;
+
     camera.attachControl(app.canvas, true);
+
     return camera;
   }
 

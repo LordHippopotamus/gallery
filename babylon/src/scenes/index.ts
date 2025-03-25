@@ -1,6 +1,5 @@
 import {
   Camera,
-  Engine,
   FlyCamera,
   PointLight,
   Scene,
@@ -27,7 +26,10 @@ export class Base extends Scene {
   setupCamera(): Camera {
     const camera = new FlyCamera("FlyCamera", new Vector3(0, 1.8, 0), this);
     camera.rollCorrect = 5;
-    camera.speed = 0.1;
+    camera.speed = 0.2;
+    camera.checkCollisions = true;
+    camera.minZ = 0.01;
+    camera.ellipsoid = new Vector3(0.2, 0.2, 0.2);
     camera._checkInputs = function () {
       FlyCamera.prototype._checkInputs.call(this);
       this.position.y = 1.8;
