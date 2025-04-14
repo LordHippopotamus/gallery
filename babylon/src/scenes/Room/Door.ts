@@ -1,16 +1,15 @@
 import {
-  AbstractMesh,
-  Camera,
   Color3,
-  Matrix,
   MeshBuilder,
-  Ray,
+  PointerEventTypes,
   Scene,
   StandardMaterial,
   Vector3,
 } from "@babylonjs/core";
 import { app } from "../../main";
 import { Menu } from "../Menu";
+import { getCenterRay, isObectsNear } from "../../utils";
+import { WoodProceduralTexture } from "@babylonjs/procedural-textures";
 
 export class Door {
   constructor(
@@ -20,16 +19,12 @@ export class Door {
     depth: number,
     position: Vector3
   ) {
+    const texture = new WoodProceduralTexture("wood", 1024, scene);
+
     const doorMaterial = new StandardMaterial("doorMaterial", scene);
-    doorMaterial.diffuseColor = new Color3(0.2, 0.4, 0.2);
+    doorMaterial.diffuseTexture = texture;
     doorMaterial.specularPower = 0;
 
-    const doorHoveredMaterial = new StandardMaterial(
-      "doorHoveredMaterial",
-      scene
-    );
-    doorHoveredMaterial.diffuseColor = new Color3(0.8, 0.4, 0.4);
-    doorHoveredMaterial.specularPower = 0;
     const door = MeshBuilder.CreateBox(
       "door",
       {
@@ -44,17 +39,21 @@ export class Door {
     door.material = doorMaterial;
     door.position = position;
 
-    scene.onPointerDown = () => {
+    scene.onPointerObservable.add((pointerInfo) => {
+      if (
+        pointerInfo.type !== PointerEventTypes.POINTERDOWN ||
+        !isObectsNear(scene.cameras[0], door, 5)
+      ) {
+        return;
+      }
+
       const ray = getCenterRay(scene, scene.cameras[0]);
       const hit = scene.pickWithRay(ray);
 
-      if (
-        hit?.pickedMesh?.name === "door" &&
-        isCameraNearButton(scene.cameras[0], door, 5)
-      ) {
+      if (hit?.pickedMesh === door) {
         app.switchScene(new Menu());
       }
-    };
+    });
 
     scene.onBeforeRenderObservable.add(() => {
       const ray = getCenterRay(scene, scene.cameras[0]);
@@ -63,31 +62,12 @@ export class Door {
       if (
         hit &&
         hit.pickedMesh === door &&
-        isCameraNearButton(scene.cameras[0], door, 5)
+        isObectsNear(scene.cameras[0], door, 5)
       ) {
-        door.material = doorHoveredMaterial;
+        doorMaterial.emissiveColor = new Color3(0.3, 0.3, 0.3);
       } else {
-        door.material = doorMaterial;
+        doorMaterial.emissiveColor = new Color3(0, 0, 0);
       }
     });
   }
-}
-
-function getCenterRay(scene: Scene, camera: Camera): Ray {
-  return scene.createPickingRay(
-    scene.getEngine().getRenderWidth() / 2,
-    scene.getEngine().getRenderHeight() / 2,
-    Matrix.Identity(),
-    camera
-  );
-}
-
-function isCameraNearButton(
-  camera: Camera,
-  button: AbstractMesh,
-  maxDistance: number
-): boolean {
-  return (
-    Vector3.Distance(camera.position, button.absolutePosition) <= maxDistance
-  );
 }

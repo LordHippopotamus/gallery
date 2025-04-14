@@ -1,10 +1,10 @@
-require("dotenv").config();
+import express from "express";
+import passport from "passport";
+import session from "express-session";
+import cors from "cors";
 
-const express = require("express");
-const passport = require("passport");
-const GitHubStrategy = require("passport-github2").Strategy;
-const session = require("express-session");
-const cors = require("cors");
+import { default as authRouter } from "./routes/auth.js";
+import { default as storageRouter } from "./routes/storage.js";
 
 const app = express();
 
@@ -26,45 +26,6 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(
-  new GitHubStrategy(
-    {
-      clientID: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "/auth/github/callback",
-    },
-    (accessToken, refreshToken, profile, done) => done(null, profile)
-  )
-);
-
-passport.serializeUser((user, done) => done(null, user));
-
-passport.deserializeUser((user, done) => done(null, user));
-
-app.get(
-  "/auth/github",
-  passport.authenticate("github", { scope: ["user:email"] })
-);
-
-app.get("/auth/github/callback", passport.authenticate("github"), (req, res) =>
-  res.redirect(process.env.ORIGIN)
-);
-
-app.get("/session", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ id: req.user.id, name: req.user.username });
-  } else {
-    res.status(401).json({ message: "Not authenticated" });
-  }
-});
-
-app.get("/logout", function (req, res, next) {
-  req.logout(function (err) {
-    if (err) {
-      return next(err);
-    }
-    res.redirect(process.env.ORIGIN);
-  });
-});
-
+app.use(authRouter);
+app.use(storageRouter);
 app.listen(3000);

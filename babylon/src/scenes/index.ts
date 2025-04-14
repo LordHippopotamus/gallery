@@ -29,7 +29,6 @@ export class Base extends Scene {
     camera.speed = 0.2;
     camera.checkCollisions = true;
     camera.minZ = 0.01;
-    camera.ellipsoid = new Vector3(0.2, 0.2, 0.2);
     camera._checkInputs = function () {
       FlyCamera.prototype._checkInputs.call(this);
       this.position.y = 1.8;

@@ -14,9 +14,36 @@
       height: 100vh;
       display: block;
     }
+    .loader {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      width: 48px;
+      height: 48px;
+      border: 5px solid #6ebeff;
+      border-bottom-color: #337ab7;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    .hidden {
+      display: none;
+    }
   </style>
   <body>
+    <div class="loader hidden"></div>
     <canvas id="app"></canvas>
+    <input type="file" id="hiddenFileInput" style="display: none" />
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
