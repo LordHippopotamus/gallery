@@ -7,20 +7,20 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { Inspector } from "@babylonjs/inspector";
-import { EdgeDetectionPostProcess } from "@babylonjs/post-processes";
 import { app } from "../main";
 
 export class Base extends Scene {
   camera: Camera;
+  isControlsAllowed?: boolean = true;
 
-  constructor(options?: SceneOptions) {
+  constructor(isControlsAllowed?: boolean, options?: SceneOptions) {
     super(app.engine, options);
 
     if (import.meta.env.DEV) Inspector.Show(this, {});
 
+    this.isControlsAllowed = isControlsAllowed;
     this.camera = this.setupCamera();
     this.setupLight();
-    this.setupPostprocess();
   }
 
   setupCamera(): Camera {
@@ -33,15 +33,33 @@ export class Base extends Scene {
       FlyCamera.prototype._checkInputs.call(this);
       this.position.y = 1.8;
     };
-    camera.attachControl();
+    if (this.isControlsAllowed) {
+      camera.attachControl();
+    }
+    const requestPointerLock = () => {
+      if (this.isControlsAllowed) {
+        app.canvas.requestPointerLock();
+      }
+    };
+    app.canvas.addEventListener("click", requestPointerLock);
+    this.onDispose = () =>
+      app.canvas.removeEventListener("click", requestPointerLock);
+
     return camera;
+  }
+
+  allowControls() {
+    this.isControlsAllowed = true;
+    this.camera.attachControl();
+  }
+
+  disallowControls() {
+    document.exitPointerLock();
+    this.isControlsAllowed = false;
+    this.camera.detachControl();
   }
 
   setupLight() {
     new PointLight("light", new Vector3(0, 3, 0), this);
-  }
-
-  setupPostprocess() {
-    new EdgeDetectionPostProcess("edgeDetection", this, 1, this.camera);
   }
 }

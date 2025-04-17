@@ -103,4 +103,28 @@ router.get("/storage/pictures/:userId/:filename", async (req, res) => {
   }
 });
 
+router.post("/storage/pictures/:userId/:filename", async (req, res) => {
+  console.log(req.user);
+  if (!req.isAuthenticated() || req.user.id !== req.params.userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  try {
+    const bucketExists = await minioClient.bucketExists(bucket);
+
+    if (!bucketExists) {
+      return;
+    }
+
+    const objectName = req.params.userId + "/" + req.params.filename;
+    console.log(objectName);
+
+    await minioClient.removeObject(bucket, objectName);
+    await prisma.image.delete({ where: { path: objectName } });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+    res.status(404).json({ message: "File not exists" });
+  }
+});
+
 export default router;

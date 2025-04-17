@@ -8,7 +8,7 @@ export class Menu extends Base {
   panel: GUI3DManager;
 
   constructor() {
-    super();
+    super(false);
     this.panel = new MainPanel(this);
   }
 

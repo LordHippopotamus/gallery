@@ -10,7 +10,7 @@ datasource db {
 model Image {
   id        String    @id @default(cuid())
   place     Int
-  path      String
+  path      String    @unique
   ownerId   String
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

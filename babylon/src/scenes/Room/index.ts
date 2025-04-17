@@ -10,14 +10,10 @@ export class Room extends Base {
   wallHeight: number;
   wallThickness: number;
   pictures: Picture[];
+  isPointerLockAllowed: boolean = true;
 
   constructor() {
-    super();
-
-    const requestPointerLock = () => app.canvas.requestPointerLock();
-    app.canvas.addEventListener("click", requestPointerLock);
-    this.onDispose = () =>
-      app.canvas.removeEventListener("click", requestPointerLock);
+    super(true);
 
     this.roomSize = 10;
     this.wallHeight = 3;
