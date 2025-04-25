@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 import { config } from "dotenv";
 import { prisma } from "../lib/prisma.js";
+import path from "path";
 config();
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -18,7 +19,7 @@ const minioClient = new Minio.Client({
   secretKey: process.env.MINIO_SECRET_KEY,
 });
 const bucket = "gallery";
-const supportedExtensions = ["jpg", "jpeg", "png", "webp", "avif"];
+const supportedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".avif"];
 
 router.post("/storage/upload", upload.single("file"), async (req, res) => {
   if (!req.isAuthenticated()) {
@@ -29,7 +30,7 @@ router.post("/storage/upload", upload.single("file"), async (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const extension = req.file.originalname.split(".")[1].toLowerCase();
+  const extension = path.extname(req.file.originalname);
   if (!supportedExtensions.includes(extension)) {
     return res.status(415).json({ message: "Unsupported Media Type" });
   }
@@ -66,13 +67,9 @@ router.post("/storage/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-router.get("/storage/pictures", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
+router.get("/storage/pictures/:userId", async (req, res) => {
   const images = await prisma.image.findMany({
-    where: { ownerId: req.user.id },
+    where: { ownerId: req.params.userId },
   });
 
   res.json({ images });
@@ -104,7 +101,6 @@ router.get("/storage/pictures/:userId/:filename", async (req, res) => {
 });
 
 router.post("/storage/pictures/:userId/:filename", async (req, res) => {
-  console.log(req.user);
   if (!req.isAuthenticated() || req.user.id !== req.params.userId) {
     return res.status(401).json({ message: "Not authenticated" });
   }
@@ -116,13 +112,10 @@ router.post("/storage/pictures/:userId/:filename", async (req, res) => {
     }
 
     const objectName = req.params.userId + "/" + req.params.filename;
-    console.log(objectName);
-
     await minioClient.removeObject(bucket, objectName);
     await prisma.image.delete({ where: { path: objectName } });
     return res.json({ ok: true });
   } catch (err) {
-    console.log(err);
     res.status(404).json({ message: "File not exists" });
   }
 });

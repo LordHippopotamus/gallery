@@ -16,9 +16,10 @@ export class MainPanel extends GUI3DManager {
     if (app.user) {
       const buttonMyRoom = new HolographicButton("ButtonMyRoom");
       buttonMyRoom.text = "My Room";
-      buttonMyRoom.onPointerClickObservable.add(() =>
-        app.switchScene(new Room())
-      );
+      buttonMyRoom.onPointerClickObservable.add(() => {
+        if (!app.user) return;
+        app.switchScene(new Room(app.user.id));
+      });
       panel.addControl(buttonMyRoom);
 
       const buttonLogout = new HolographicButton("ButtonLogout");

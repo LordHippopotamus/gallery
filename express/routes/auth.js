@@ -31,6 +31,10 @@ passport.serializeUser((user, done) => done(null, user));
 
 passport.deserializeUser((user, done) => done(null, user));
 
+router.get("/users", async (req, res) =>
+  res.json(await prisma.user.findMany())
+);
+
 router.get(
   "/auth/github",
   passport.authenticate("github", { scope: ["user:email"] })

@@ -6,15 +6,17 @@ import { Door } from "./Door";
 import { Picture } from "./Picture";
 
 export class Room extends Base {
+  userId: string;
   roomSize: number;
   wallHeight: number;
   wallThickness: number;
   pictures: Picture[];
   isPointerLockAllowed: boolean = true;
 
-  constructor() {
+  constructor(userId: string) {
     super(true);
 
+    this.userId = userId;
     this.roomSize = 10;
     this.wallHeight = 3;
     this.wallThickness = 0.2;
@@ -35,15 +37,10 @@ export class Room extends Base {
   }
 
   async drawPictures() {
-    const loader = document.querySelector(".loader");
-    if (!loader) return;
-
-    loader.classList.remove("hidden");
+    app.showLoader();
 
     this.pictures.forEach((el) => el.dispose());
-    const res = await fetch(app.baseUrl + "/storage/pictures", {
-      credentials: "include",
-    });
+    const res = await fetch(app.baseUrl + "/storage/pictures/" + this.userId);
     const { images }: { images: { [k: string]: any }[] } = await res.json();
 
     const positions = [
@@ -125,7 +122,9 @@ export class Room extends Base {
         rotation: new Vector3(0, -Math.PI / 2, 0),
         path: null,
       },
-    ].map((position) => {
+    ];
+
+    const postitionsWithImages = positions.map((position) => {
       const fetchedPicture = images.find((el) => el.place === position.place);
       return {
         ...position,
@@ -133,7 +132,7 @@ export class Room extends Base {
       };
     });
 
-    this.pictures = positions.map(
+    this.pictures = postitionsWithImages.map(
       (el) =>
         new Picture(
           this,
@@ -143,14 +142,16 @@ export class Room extends Base {
           el.position,
           el.rotation,
           el.place,
-          el.path
+          el.path,
+          this.userId === app.user?.id
         )
     );
-    loader.classList.add("hidden");
+
+    app.hideLoader();
   }
 
   setupLight() {
     const light = new HemisphericLight("light", Vector3.Zero(), this);
-    light.intensity = 0.6;
+    light.intensity = 0.5;
   }
 }

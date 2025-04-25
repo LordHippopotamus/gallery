@@ -28,6 +28,10 @@ export class Menu extends Base {
     camera.lowerBetaLimit = Math.PI / 4;
     camera.upperBetaLimit = (Math.PI * 3) / 4;
 
+    camera.lowerRadiusLimit = 3;
+    camera.upperRadiusLimit = 10;
+    camera.wheelPrecision = 20;
+
     camera.attachControl(app.canvas, true);
 
     return camera;

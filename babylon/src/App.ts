@@ -42,4 +42,18 @@ export class App {
   logout = () => {
     window.location.href = this.baseUrl + "/logout";
   };
+
+  showLoader = () => {
+    const loader = document.querySelector(".loader");
+    if (!loader) return;
+
+    loader.classList.remove("hidden");
+  };
+
+  hideLoader = () => {
+    const loader = document.querySelector(".loader");
+    if (!loader) return;
+
+    loader.classList.add("hidden");
+  };
 }

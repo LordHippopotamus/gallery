@@ -20,7 +20,7 @@ import {
 } from "@babylonjs/gui";
 
 export class Picture {
-  private _mesh: Mesh;
+  private _mesh?: Mesh;
   private _modalOpen: boolean = false;
 
   constructor(
@@ -31,9 +31,10 @@ export class Picture {
     position: Vector3,
     rotation: Vector3,
     place: number,
-    path: string | null
+    path: string | null,
+    editable: boolean = false
   ) {
-    if (!path) {
+    if (!path && editable) {
       const emptyPictureMaterial = new StandardMaterial(
         "emptyPictureMaterial",
         scene
@@ -41,12 +42,6 @@ export class Picture {
       emptyPictureMaterial.diffuseColor = new Color3(0.2, 0.4, 0.2);
       emptyPictureMaterial.specularPower = 0;
 
-      const emptyPictureHoveredMaterial = new StandardMaterial(
-        "emptyPictureHoveredMaterial",
-        scene
-      );
-      emptyPictureHoveredMaterial.diffuseColor = new Color3(0.8, 0.4, 0.4);
-      emptyPictureHoveredMaterial.specularPower = 0;
       const picture = MeshBuilder.CreateBox(
         "picture",
         {
@@ -107,12 +102,12 @@ export class Picture {
           hit.pickedMesh === picture &&
           isObectsNear(scene.cameras[0], picture, 5)
         ) {
-          picture.material = emptyPictureHoveredMaterial;
+          emptyPictureMaterial.emissiveColor = new Color3(0.1, 0.1, 0.1);
         } else {
-          picture.material = emptyPictureMaterial;
+          emptyPictureMaterial.emissiveColor = new Color3(0, 0, 0);
         }
       });
-    } else {
+    } else if (path) {
       const material = new StandardMaterial("material", scene);
       material.specularPower = 0;
 
@@ -159,7 +154,7 @@ export class Picture {
           hit.pickedMesh === picture &&
           isObectsNear(scene.cameras[0], picture, 5)
         ) {
-          material.emissiveColor = new Color3(0.6, 0.3, 0.3);
+          material.emissiveColor = new Color3(0.1, 0.1, 0.1);
         } else {
           material.emissiveColor = new Color3(0, 0, 0);
         }
@@ -232,31 +227,34 @@ export class Picture {
           });
           buttonPanel.addControl(button1);
 
-          const button2 = Button.CreateSimpleButton("Delete", "Delete");
-          button2.width = "120px";
-          button2.height = "40px";
-          button2.color = "white";
-          button2.cornerRadius = 5;
-          button2.background = "#d95757";
-          button2.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-          button2.onPointerUpObservable.add(async () => {
-            await fetch(app.baseUrl + "/storage/pictures/" + path, {
-              method: "post",
-              credentials: "include",
+          if (editable) {
+            const button2 = Button.CreateSimpleButton("Delete", "Delete");
+            button2.width = "120px";
+            button2.height = "40px";
+            button2.color = "white";
+            button2.cornerRadius = 5;
+            button2.background = "#d95757";
+            button2.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+            button2.onPointerUpObservable.add(async () => {
+              await fetch(app.baseUrl + "/storage/pictures/" + path, {
+                method: "post",
+                credentials: "include",
+              });
+              advancedTexture.dispose();
+              this._modalOpen = false;
+              scene.allowControls();
+              await scene.drawPictures();
             });
-
-            advancedTexture.dispose();
-            this._modalOpen = false;
-            scene.allowControls();
-            await scene.drawPictures();
-          });
-          buttonPanel.addControl(button2);
+            buttonPanel.addControl(button2);
+          }
         }
       });
     }
   }
 
   dispose() {
-    this._mesh.dispose();
+    if (this._mesh) {
+      this._mesh.dispose();
+    }
   }
 }
