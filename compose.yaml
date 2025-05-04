@@ -1,0 +1,32 @@
+name: diplomas
+
+services:
+  postgres:
+    image: "postgres:16.3-alpine3.20"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: always
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+  babylon:
+    build: ./babylon
+    ports:
+      - 4173:4173
+    depends_on:
+      - express
+    restart: always
+
+  express:
+    build: ./express
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+      - minio
+    restart: always
